@@ -1,5 +1,5 @@
 {
-  "name": "multi-cascader-base-ele",
+  "name": "@mtfe/multi-cascader-base-ele-c",
   "version": "1.0.28",
   "description": "基于element-ui实现的多选级联组件，完全继承element-ui级联组件功能,并进行业务定制，保证2级级联与太平洋交互统一",
   "main": "dist/index.js",
@@ -73,7 +73,8 @@
     "webpack-dev-server": "^3.1.10",
     "webpack-merge": "4.1.2"
   },
-  "author": "chengzhenyu925@163.com",
+  "author": "wangxiaoliang04@meituan.com",
+  "maintainer": "wangxiaoliang04",
   "license": "ISC",
   "repository": {
     "type": "git",

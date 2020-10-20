@@ -249,10 +249,8 @@
           return;
         }
         let parent = (item.__IS__FLAT__OPTIONS || __IS__FLAT__OPTIONS) && item.parent ? item.parent : this.findParent(item);
-        console.log(233, parent)
         if (parent) {
           let parentStatus = this.isItemChecked(parent);
-          console.log(parentStatus === CHILD_ALL_CHECKED)
           const isActive = this.activeMultiValue.find((ele) => this.isArrayEqual(parent.path, ele));
 
           if (this.parentLostConnect && !isActive) {
@@ -304,7 +302,6 @@
         return !this.onlyOutPutLeafNode || (this.onlyOutPutLeafNode && this.isLeafNode(item));
       },
       select(item, menuIndex, multipleCheckBox) {
-        console.log(item, menuIndex, multipleCheckBox)
         if (this.multiple) {
           if (multipleCheckBox) {
             if (this.isNodeCanpush(item, multipleCheckBox) && !this.activeMultiValue.find((ele) => this.isArrayEqual(item.path, ele))) {

@@ -260,6 +260,10 @@ export default {
             type: Boolean,
             default: true
         },
+        parentLostConnect: {
+            type: Boolean,
+            default: false
+        },
         debounce: {
             type: Number,
             default: 300
@@ -413,6 +417,7 @@ export default {
             this.menu.props = this.props;
             this.menu.multiple = this.multiple;
             this.menu.selectChildren = this.selectChildren;
+            this.menu.parentLostConnect = this.parentLostConnect;
             this.menu.expandTrigger = this.expandTrigger;
             this.menu.changeOnSelect = this.changeOnSelect;
             this.menu.onlyOutPutLeafNode = this.onlyOutPutLeafNode;

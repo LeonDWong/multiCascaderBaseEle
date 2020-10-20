@@ -33,6 +33,7 @@
   const CHILD_ALL_CHECKED = 2;
   const CHILD_SOME_CHECKED = 3;
   const UNCHECKED = 4;
+  const CHILD_NO_CHECKED = 5;
 
   export default {
     name: 'ElMultiCascaderMenu',
@@ -54,6 +55,7 @@
         multiple: false,
         currentActiveValue: [],
         selectChildren: false,
+        parentLostConnect: false,
         onlyOutPutLeafNode: false, //
         id: generateId()
       };
@@ -162,7 +164,7 @@
           if (this.activeMultiValue.find((ele)=> this.isArrayEqual(item.path, ele))) {
             isChecked = CHECKED; // path在activeMultiValue中
           } else if (item.path.length > 0 && this.activeMultiValue.find((ele) => this.isArrayEqual(item.path.slice(0, item.path.length - 2), ele))) {
-            if (this.selectChildren) {
+            if (this.selectChildren && !this.parentLostConnect) {
               isChecked = CHECKED; // 如果选中父级自动选中子菜单(selectChildren: true) 且非第一级菜单，且父节点的path在activeMultiValue中
             }
           } else if (item.children && item.children.length > 0) {
@@ -176,6 +178,8 @@
                 isChecked = CHILD_ALL_CHECKED; // 如果所有的子菜单都checked
               } else if (!item.children.every(ele => this.isItemChecked(ele) === UNCHECKED)) {
                 isChecked = CHILD_SOME_CHECKED; // 如果所有的子菜单不全是unchecked
+              } else {
+                isChecked = CHILD_NO_CHECKED; // 如果所有的子菜单全是unchecked
               }
             }
           } else if (item.__IS__FLAT__OPTIONS) {
@@ -193,6 +197,8 @@
                   return this.activeMultiValue.find((ele) => this.isArrayEqual(child.path, ele));
                 })) {
                   isChecked = CHILD_SOME_CHECKED; // 如果所有的子菜单不全是unchecked
+                } else {
+                  isChecked = CHILD_NO_CHECKED; // 如果所有的子菜单全是unchecked
                 }
               }
             }
@@ -221,6 +227,15 @@
           });
         }
       },
+      popAllChild(item) {
+        // 判断是否是搜索情况，如果是则找出所有的子节点放入
+        if (Array.isArray(item.children)) {
+          item.children.forEach((child) => {
+            const idx = this.activeMultiValue.findIndex((activeEle) => this.isArrayEqual(child.path, activeEle));
+            if (idx > -1) this.activeMultiValue.splice(idx, 1);
+          });
+        }
+      },
       findParent(item) {
         if (item.path.length > 1) {
           let parentMenuIndex = item.path.length - 2;
@@ -230,17 +245,46 @@
       },
       pushParent(item, __IS__FLAT__OPTIONS) {
         // 子节点全checked时push父节点
-        if (!this.isNodeCanpush(item)) {
+        if (!this.isNodeCanpush(item, true)) {
           return;
         }
         let parent = (item.__IS__FLAT__OPTIONS || __IS__FLAT__OPTIONS) && item.parent ? item.parent : this.findParent(item);
+        console.log(233, parent)
         if (parent) {
           let parentStatus = this.isItemChecked(parent);
-          if (parentStatus === CHILD_ALL_CHECKED && !this.activeMultiValue.find((ele) => this.isArrayEqual(parent.path, ele))) {
+          console.log(parentStatus === CHILD_ALL_CHECKED)
+          const isActive = this.activeMultiValue.find((ele) => this.isArrayEqual(parent.path, ele));
+
+          if (this.parentLostConnect && !isActive) {
+              if (parentStatus === CHILD_ALL_CHECKED || parentStatus === CHILD_NO_CHECKED) {
+                  this.activeMultiValue.push(parent.path);
+              }
+              if (parentStatus === CHILD_ALL_CHECKED) {
+                parent.children.forEach((ele) => {
+                  const idx = this.activeMultiValue.findIndex((activeEle) => this.isArrayEqual(ele.path, activeEle));
+
+                  if (idx > -1) this.activeMultiValue.splice(idx, 1);
+                });
+              }
+              return;
+          }
+
+          if (parentStatus === CHILD_ALL_CHECKED && !isActive) {
             if (this.isNodeCanpush(parent)) {
               this.activeMultiValue.push(parent.path);
               this.pushParent(parent, true);
             }
+          }
+        }
+      },
+      popParent(item) {
+        let parent = item.__IS__FLAT__OPTIONS && item.parent ? item.parent : this.findParent(item);
+        if (parent) {
+          const isActive = this.activeMultiValue.find((ele) => this.isArrayEqual(parent.path, ele));
+
+          if (isActive) {
+            const idx = this.activeMultiValue.findIndex((activeEle) => this.isArrayEqual(parent.path, activeEle));
+            if (idx > -1) this.activeMultiValue.splice(idx, 1);
           }
         }
       },
@@ -250,27 +294,38 @@
         }
         return !(Array.isArray(item.children) && item.children.length > 0);
       },
-      isNodeCanpush(item) {
+      isNodeCanpush(item, isCheck = false) {
+        // onlyOutPutLeafNode 与 parentLostConnect 同时使用，特殊逻辑
+        if (this.onlyOutPutLeafNode && this.parentLostConnect) {
+          return isCheck;
+        }
+
         // 只有在只输出叶子节点且节点为叶子或者 输出所有选中节点是才push
         return !this.onlyOutPutLeafNode || (this.onlyOutPutLeafNode && this.isLeafNode(item));
       },
       select(item, menuIndex, multipleCheckBox) {
+        console.log(item, menuIndex, multipleCheckBox)
         if (this.multiple) {
           if (multipleCheckBox) {
-            if (this.isNodeCanpush(item) && !this.activeMultiValue.find((ele) => this.isArrayEqual(item.path, ele))) {
+            if (this.isNodeCanpush(item, multipleCheckBox) && !this.activeMultiValue.find((ele) => this.isArrayEqual(item.path, ele))) {
               this.activeMultiValue.push(item.path);
+
+              if (this.parentLostConnect) this.popAllChild(item);
             }
-            if (this.selectChildren) {
+            if (this.selectChildren && !this.parentLostConnect) {
               this.pushAllChild(item);
             }
+
+            if (this.parentLostConnect) {
+              this.popParent(item);
+            }
+
             // !selectChildren && !onlyOutPutLeafNode 
             if (!this.onlyOutPutLeafNode && this.selectChildren) {
-              // if(this.selectChildren) {
-                this.pushParent(item);
-              // }
+              this.pushParent(item);
             }
           } else if(multipleCheckBox === false){
-            if (this.selectChildren) { // 子节点如果随着父节点联动，则子节点取消也会取消父节点的选中状态, 并取消孙子节点的状态
+            if (this.selectChildren && !this.parentLostConnect) { // 子节点如果随着父节点联动，则子节点取消也会取消父节点的选中状态, 并取消孙子节点的状态
               // 删除父节点
               item.path.forEach((ele, idx) => {
                 let currentPath = item.path.slice(0, idx + 1);
@@ -512,7 +567,7 @@
                   class="multi-el-cascader-checkbox"
                   indeterminate={itemStatus === CHILD_SOME_CHECKED}
                   value={itemStatus === CHECKED || itemStatus === CHILD_ALL_CHECKED}
-                  disabled={item.disabled || (!changeOnSelect && Array.isArray(item.children) && item.children.length > 0)} // 如果item是disabled的，或者只能选末级的
+                  disabled={item.disabled || (!this.parentLostConnect && !changeOnSelect && Array.isArray(item.children) && item.children.length > 0)} // 如果item是disabled的，或者只能选末级的
                   {...menuItemEvents}
                 ></el-checkbox>
                 : null}

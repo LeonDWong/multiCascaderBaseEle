@@ -38,7 +38,9 @@
                 <el-checkbox v-model="appendToBody"
                     label="appendToBody--是否挂载到body上，选否需用parent-el属性提供挂载元素选择器"
                     @change="handleChange"></el-checkbox>
-
+                <el-checkbox v-model="parentLostConnect"
+                    label="parentLostConnect--父级对子级失去联动，子级保持对父级联动，特殊交互"
+                    @change="handleChange"></el-checkbox>
 
                 <el-radio-group v-model="expandTrigger"
                     @change="handleChange">
@@ -72,6 +74,7 @@
                 :clearable="clearable"
                 :change-on-select="changeOnSelect"
                 :append-to-body="appendToBody"
+                :parent-lost-connect="parentLostConnect"
                 @active-item-change="handleItemChange"
                 size="medium"
                 parent-el=".multi-cascader"
@@ -111,7 +114,29 @@ export default {
         const optionsShow = [{
             label: "默认",
             id: -1,
-            children: [],
+            children: [{
+                        label: "异步加载的二级",
+                        children: [{
+                            label: "安徽电信",
+                            id: 51,
+                            children: null,
+                            value: 51
+                        },
+                        {
+                            label: "福建电信",
+                            id: 52,
+                            children: null,
+                            value: 52
+                        },
+                        {
+                            label: "江苏电信",
+                            id: 53,
+                            children: null,
+                            value: 53
+                        }],
+                        id: 11,
+                        value: 11
+                    }],
             value: -1
         },
         {
@@ -266,10 +291,30 @@ export default {
             id: 7,
             children: null,
             value: 7
-        }];
+        },
+        {
+            label: "模仿菜单",
+            id: 8,
+            children: [
+                {
+                    label: '1',
+                    value: 1,
+                },
+                                {
+                    label: '2',
+                    value: 2,
+                },
+                                {
+                    label: '3',
+                    value: 3,
+                },
+            ],
+            value: 8
+        }
+        ];
         return {
             shouldReset: true,
-            selectedOptions: [[ 1, 11, 51 ]],
+            selectedOptions: [],
             selectedOptions2: [],
             optionsShow: JSON.parse(JSON.stringify(optionsShow)),
             options2: JSON.parse(JSON.stringify(optionsShow)),
@@ -277,6 +322,7 @@ export default {
             appendToBody: true,
             multiple: true,
             selectChildren: true,
+            parentLostConnect: true,
             onlyOutPutLeafNode: false,
             collapseTags: false,
             filterable: true,
@@ -302,34 +348,12 @@ export default {
             });
         },
         handleItemChange($event) {
-            if ($event[0] === -1) {
-                setTimeout(() => {
-                    this.options[0].children = [{
-                        label: "异步加载的二级",
-                        children: [{
-                            label: "安徽电信",
-                            id: 51,
-                            children: null,
-                            value: 51
-                        },
-                        {
-                            label: "福建电信",
-                            id: 52,
-                            children: null,
-                            value: 52
-                        },
-                        {
-                            label: "江苏电信",
-                            id: 53,
-                            children: null,
-                            value: 53
-                        }],
-                        id: 11,
-                        value: 11
-                    }]
-                }, 1000);
+            // if ($event[0] === -1) {
+            //     setTimeout(() => {
+            //         this.options[0].children = 
+            //     }, 1000);
 
-            }
+            // }
         }
     },
 };

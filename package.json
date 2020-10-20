@@ -1,6 +1,6 @@
 {
   "name": "@mtfe/multi-cascader-base-ele-c",
-  "version": "1.0.28",
+  "version": "1.0.29",
   "description": "基于element-ui实现的多选级联组件，完全继承element-ui级联组件功能,并进行业务定制，保证2级级联与太平洋交互统一",
   "main": "dist/index.js",
   "directories": {
